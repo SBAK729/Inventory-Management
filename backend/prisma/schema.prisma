@@ -1,0 +1,164 @@
+// Prisma schema for the OTech Inventory & Purchase Request System
+// Mirrors the ER diagram in Part A (01_Business_Analysis.docx, Section 7)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  MANAGER
+  STOREKEEPER
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  FULFILLED
+}
+
+enum TransactionType {
+  RECEIPT
+  ISSUE
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  managerId Int?     @unique
+  manager   User?    @relation("DepartmentManager", fields: [managerId], references: [id])
+
+  users             User[]            @relation("DepartmentUsers")
+  purchaseRequests  PurchaseRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+
+  departmentId Int?
+  department   Department? @relation("DepartmentUsers", fields: [departmentId], references: [id])
+
+  // Inverse side of Department.manager (a user may manage at most one department)
+  managedDepartment Department? @relation("DepartmentManager")
+
+  purchaseRequests  PurchaseRequest[]  @relation("Requester")
+  decisions         PurchaseRequest[]  @relation("Approver")
+  stockTransactions StockTransaction[] @relation("PerformedBy")
+
+  mustChangePassword     Boolean   @default(true)   
+  passwordResetToken     String?   @unique           
+  passwordResetExpiresAt DateTime?
+  tokenVersion            Int       @default(0) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Item {
+  id              Int    @id @default(autoincrement())
+  code            String @unique
+  name            String
+  category        String
+  unit            String
+  currentQuantity Int    @default(0)
+  minQuantity     Int    @default(0)
+  isActive        Boolean @default(true)
+
+  lineItems         RequestLineItem[]
+  stockTransactions StockTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("items")
+}
+
+model PurchaseRequest {
+  id              Int           @id @default(autoincrement())
+  requestNumber   String        @unique
+  purpose         String
+  status          RequestStatus @default(DRAFT)
+  rejectionReason String?
+  requestDate     DateTime      @default(now())
+  decidedAt       DateTime?
+
+  requesterId Int
+  requester   User @relation("Requester", fields: [requesterId], references: [id])
+
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  approverId Int?
+  approver   User? @relation("Approver", fields: [approverId], references: [id])
+
+  lineItems         RequestLineItem[]
+  stockTransactions StockTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("purchase_requests")
+}
+
+model RequestLineItem {
+  id Int @id @default(autoincrement())
+
+  purchaseRequestId Int
+  purchaseRequest   PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id])
+
+  requestedQuantity Int
+  issuedQuantity    Int @default(0)
+
+  @@unique([purchaseRequestId, itemId])
+  @@map("request_line_items")
+}
+
+model StockTransaction {
+  id       Int              @id @default(autoincrement())
+  type     TransactionType
+  quantity Int
+  date     DateTime         @default(now())
+
+  itemId Int
+  item   Item @relation(fields: [itemId], references: [id])
+
+  purchaseRequestId Int?
+  purchaseRequest   PurchaseRequest? @relation(fields: [purchaseRequestId], references: [id])
+
+  performedById Int
+  performedBy   User @relation("PerformedBy", fields: [performedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("stock_transactions")
+}
