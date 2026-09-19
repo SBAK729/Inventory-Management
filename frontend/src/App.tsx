@@ -1,122 +1,75 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from '@/components/ui/sonner';
 
-function App() {
-  const [count, setCount] = useState(0)
+import { LoginPage } from '@/features/auth/LoginPage';
+import { ChangePasswordPage } from '@/features/auth/ChangePasswordPage';
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
+import { ItemsPage } from '@/features/items/ItemsPage';
+import { DepartmentsPage } from '@/features/departments/DepartmentsPage';
+import { UsersPage } from '@/features/users/UsersPage';
+import { MyRequestsPage } from '@/features/purchase-requests/MyRequestsPage';
+import { NewPurchaseRequestPage } from '@/features/purchase-requests/NewPurchaseRequestPage';
+import { EditPurchaseRequestPage } from '@/features/purchase-requests/EditPurchaseRequestPage';
+import { PurchaseRequestDetailPage } from '@/features/purchase-requests/PurchaseRequestDetailPage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
+import { PendingApprovalsPage } from '@/features/purchase-requests/PendingApprovalsPage';
+import { AllRequestsPage } from '@/features/purchase-requests/AllRequestsPage';
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+import { RequireAuth } from '@/routes/RequireAuth';
+import { RequireRole } from '@/routes/RequireRole';
+import { AppLayout } from '@/routes/AppLayout';
+import { StockPage } from '@/features/stock/StockPage';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { ReportsPage } from '@/features/reports/ReportsPage';
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+function Placeholder({ label }: { label: string }) {
+  return <div className="text-muted-foreground">{label} — coming in a later phase.</div>;
 }
 
-export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <Toaster richColors position="top-right" />
+
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        <Route element={<RequireAuth />}>
+          <Route path="/change-password" element={<ChangePasswordPage />} />
+
+          <Route element={<AppLayout />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/purchase-requests" element={<MyRequestsPage />} />
+            <Route path="/purchase-requests/new" element={<NewPurchaseRequestPage />} />
+            <Route path="/purchase-requests/:id" element={<PurchaseRequestDetailPage />} />
+            <Route path="/purchase-requests/:id/edit" element={<EditPurchaseRequestPage />} />
+
+            <Route element={<RequireRole roles={['ADMIN', 'STOREKEEPER']} />}>
+              <Route path="/items" element={<ItemsPage />} />
+              <Route path="/stock" element={<StockPage />} />
+            </Route>
+
+            <Route element={<RequireRole roles={['ADMIN']} />}>
+              <Route path="/departments" element={<DepartmentsPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/purchase-requests/all" element={<AllRequestsPage />} />
+            </Route>
+
+            <Route element={<RequireRole roles={['ADMIN', 'MANAGER']} />}>
+              <Route path="/approvals" element={<PendingApprovalsPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
