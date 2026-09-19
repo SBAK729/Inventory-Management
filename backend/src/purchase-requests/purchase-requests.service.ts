@@ -84,7 +84,32 @@ export class PurchaseRequestsService {
       orderBy: { requestDate: 'desc' },
     });
   }
+  findPendingApprovals(user: AuthUser) {
+    return this.prisma.purchaseRequest.findMany({
+      where: {
+        status: RequestStatus.SUBMITTED,
+        department: { managerId: user.userId },
+      },
+      include: REQUEST_INCLUDE,
+      orderBy: { requestDate: 'asc' },
+    });
+  }
 
+  findApprovedAwaitingFulfillment() {
+    return this.prisma.purchaseRequest.findMany({
+      where: { status: RequestStatus.APPROVED },
+      include: REQUEST_INCLUDE,
+      orderBy: { decidedAt: 'asc' },
+    });
+  }
+
+  findAllForAdmin(status?: RequestStatus) {
+    return this.prisma.purchaseRequest.findMany({
+      where: status ? { status } : undefined,
+      include: REQUEST_INCLUDE,
+      orderBy: { requestDate: 'desc' },
+    });
+  }
   async findOne(id: number, user: AuthUser) {
     const request = await this.prisma.purchaseRequest.findUnique({
       where: { id },

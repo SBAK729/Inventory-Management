@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Delete, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
-import { Role } from '../prisma/client';
+import { Body, Controller,Query,  Get, Param, Delete, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Role, RequestStatus } from '../prisma/client';
 import { CurrentUser, AuthUser } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -17,15 +17,31 @@ export class PurchaseRequestsController {
 
   // Employees (and managers, who may also need to request items) create requests.
   @Roles(Role.EMPLOYEE, Role.MANAGER)
-  @Post()
+  @Post("")
   create(@Body() dto: CreatePurchaseRequestDto, @CurrentUser() user: AuthUser) {
     return this.purchaseRequestsService.create(dto, user);
   }
-
+  @Roles(Role.ADMIN)
+  @Get()
+  findAllForAdmin(@Query('status') status?: RequestStatus) {
+    return this.purchaseRequestsService.findAllForAdmin(status);
+  }
   // Any authenticated user can see their own request history.
   @Get('mine')
   findMine(@CurrentUser() user: AuthUser) {
     return this.purchaseRequestsService.findMine(user);
+  }
+    // Manager's queue of requests awaiting their decision.
+  @Roles(Role.MANAGER)
+  @Get('pending-approvals')
+  findPendingApprovals(@CurrentUser() user: AuthUser) {
+    return this.purchaseRequestsService.findPendingApprovals(user);
+  }
+  
+  @Roles(Role.STOREKEEPER, Role.ADMIN)
+  @Get('approved')
+  findApprovedAwaitingFulfillment() {
+    return this.purchaseRequestsService.findApprovedAwaitingFulfillment();
   }
 
   // Visibility rules (owner / their manager / storekeeper / admin) are
