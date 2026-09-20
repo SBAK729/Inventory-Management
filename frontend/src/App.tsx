@@ -23,10 +23,6 @@ import { StockPage } from '@/features/stock/StockPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 
-function Placeholder({ label }: { label: string }) {
-  return <div className="text-muted-foreground">{label} — coming in a later phase.</div>;
-}
-
 function App() {
   return (
     <BrowserRouter>

@@ -5,7 +5,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { getItems, deactivateItem } from './api';
 import { ItemFormDialog } from './ItemFormDialog';
 import { getErrorMessage } from '@/lib/api-error';
-import { isLowStock, type Item } from '@/types/item';
+import { type Item } from '@/types/item';
 import { useSearchParams } from 'react-router-dom';
 import { LowStockBadge } from '@/components/low-stock-badge';
 import { PageHeader } from '@/components/page-header';
