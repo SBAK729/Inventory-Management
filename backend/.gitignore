@@ -3,4 +3,5 @@ dist/
 .env
 *.log
 .neon
-generated/
+src/generated/
+tsconfig.tsbuildinfo
